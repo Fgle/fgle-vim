@@ -78,9 +78,6 @@
     endfunction
     noremap <leader>bg :call ToggleBG()<CR>
 
-    " if !has('gui')
-        "set term=$TERM         " Make arrow and other keys work
-    " endif
     filetype on                 " 开启文件类型检测
     filetype plugin on          " 载入文件类型插件
     filetype indent on          " 为特定文件类型载入相关缩进
@@ -90,10 +87,10 @@
     set mousehide               " 打字时隐藏鼠标光标
     scriptencoding utf-8
 
-    if has('clipboard')
-        if has('unnamedplus')  " When possible use + register for copy-paste
+    if has('clipboard')         "复制粘贴
+        if has('unnamedplus')
             set clipboard=unnamed,unnamedplus
-        else         " On mac and Windows, use * register for copy-paste
+        else         " mac and Windows
             set clipboard=unnamed
         endif
     endif
@@ -108,9 +105,8 @@
     endif
 
     set autowrite                       " 自动备份
-    set shortmess+=filmnrxoOtT          " Abbrev. of messages (avoids 'hit enter')
-    set viewoptions=folds,options,cursor,unix,slash " Better Unix / Windows compatibility
-    set virtualedit=onemore             " Allow for cursor beyond last character
+    set shortmess+=aTI                  " hit-enter提O示消息缩写
+    set virtualedit=onemore             " 允许光标移动到刚刚超过行尾的位置
     set history=100                     " 历史命令
     set spell                           " 拼写检测
     set hidden                          " 允许在未保存时切换缓冲区
@@ -122,69 +118,34 @@
     " set it to the first line when editing a git commit message
     au FileType gitcommit au! BufEnter COMMIT_EDITMSG call setpos('.', [0, 1, 1, 0])
 
-    " http://vim.wikia.com/wiki/Restore_cursor_to_file_position_in_previous_editing_session
-    " Restore cursor to file position in previous editing session
-    " To disable this, add the following to your .vimrc.before.local file:
-    "   let g:fgle_no_restore_cursor = 1
-    if !exists('g:fgle_no_restore_cursor')
-        function! ResCur()
-            if line("'\"") <= line("$")
-                silent! normal! g`"
-                return 1
-            endif
-        endfunction
-
-        augroup resCur
-            autocmd!
-            autocmd BufWinEnter * call ResCur()
-        augroup END
-    endif
-
-    " Setting up the directories {
+    " 备份和撤销 {
         set backup                      " 备份文件
-        if has('persistent_undo')
-            set undofile                " So is persistent undo ...
-            set undolevels=1000         " Maximum number of changes that can be undone
-            set undoreload=10000        " Maximum number lines to save for undo on a buffer reload
-        endif
-
-        " To disable views add the following to your .vimrc.before.local file:
-        "   let g:fgle_no_views = 1
-        if !exists('g:fgle_no_views')
-            " Add exclusions to mkview and loadview
-            " eg: *.*, svn-commit.tmp
-            let g:skipview_files = [
-                \ '\[example pattern\]'
-                \ ]
+        if has('persistent_undo')       " 撤销操作
+            set undofile
+            set undolevels=100
+            set undoreload=1000
+            set undodir="$HOME/.undodir"
         endif
     " }
 
 " }
 
 " Vim UI {
-
     if !exists('g:override_fgle_plugs') && filereadable(expand("~/.vim/plugged/vim-colors-solarized/colors/solarized.vim"))
         let g:solarized_termcolors=256
         let g:solarized_termtrans=1
         let g:solarized_contrast="normal"
         let g:solarized_visibility="normal"
-        colorscheme solarized             " Load a colorscheme
+        colorscheme solarized             " vim主题
     endif
 
-    set tabpagemax=15               " 
-    set showmode                    " 
+    set tabpagemax=15               " 最大标签页数
+    set showmode                    " 显示模式(normal,insert,visual)
 
-    set cursorline                  " 
+    set cursorline                  " 高亮光标所在行和列
+    set hl-cursorline
+    set hl-cursorcolumn
 
-    highlight clear SignColumn      " 
-    highlight clear LineNr          " 
-    "highlight clear CursorLineNr   " 
-
-    if has('cmdline_info')          " 在状态行上显示光标所在位置的行号和列号
-        set ruler
-        set rulerformat=%30(%=\:b%n%y%m%r%w\ %l,%c%V\ %P%)
-        set showcmd
-    endif
     set cmdheight=2                 "命令行高度(默认是1)
 
     if has('statusline')
@@ -200,23 +161,23 @@
         set statusline+=%=%-14.(%l,%c%V%)\ %p%%  " Right aligned file nav info
     endif
 
-    set backspace=indent,eol,start  " Backspace for dummies
-    set linespace=0                 " No extra spaces between rows
+    set backspace=indent,eol,start  "
+    set linespace=0                 " 字符之间插入的像素行数
     set number                      " 显示行号
     set showmatch                   " 显示括号配对
     set incsearch                   " 实时搜索
     set hlsearch                    " 搜索高亮匹配字符
-    set winminheight=0              " Windows can be 0 line high
+    set winminheight=0              " 非当前窗口的最小高度。
     set ignorecase                  " 查找忽略大小写
-    set smartcase                   " Case sensitive when uc present
-    set wildmenu                    " 增强模式中的命令自动完成
-    set wildmode=list:longest,full  " Command <Tab> completion, list matches, then longest common part, then all.
-    set whichwrap=b,s,h,l,<,>,[,]   " Backspace and cursor keys wrap too
-    set scrolljump=5                " Lines to scroll when cursor leaves screen
-    set scrolloff=3                 " Minimum lines to keep above and below cursor
-    set foldenable                  " Auto fold code
+    set smartcase                   " 如果搜索模式包含大写字符，不使用 'ignorecase' 选项.只有在输入搜索模式并且打开 'ignorecase' 选项时才会使用
+    set wildmenu                    " 增强模式运行命令自动补全
+    set wildmode=list:longest,full  " <Tab>补全命令,列出所有完整匹配并用最长的字串补全
+    set whichwrap=b,s,h,l,<,>,[,]   " 使指定的左右移动光标的键在行首或行尾可以移到前一行或者后一行
+    set scrolljump=5                " 光标离开屏幕时,最少的滚动行数
+    set scrolloff=3                 " 光标上下两侧最少保留的屏幕行数
+    set foldenable                  " 允许折叠
     set list
-    set listchars=tab:›\ ,trail:•,extends:#,nbsp:. " Highlight problematic whitespace
+    set listchars=tab:›\ ,trail:•,extends:#,nbsp:. " list设置
 
 " }
 
