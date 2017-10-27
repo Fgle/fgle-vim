@@ -87,7 +87,7 @@
     set mousehide               " 打字时隐藏鼠标光标
     scriptencoding utf-8
 
-    if has('clipboard')         "复制粘贴
+    if has('clipboard')         "使用系统缓冲区和粘贴板复制粘贴
         if has('unnamedplus')
             set clipboard=unnamed,unnamedplus
         else         " mac and Windows
@@ -189,28 +189,19 @@
     set expandtab                   " Tabs are spaces, not tabs
     set tabstop=4                   " An indentation every four columns
     set softtabstop=4               " backspace 删除缩进
-    set nojoinspaces                " Prevents inserting two spaces after punctuation on a join (J)
-    set splitright                  " 垂直分屏在右边
-    set splitbelow                  " 水平分屏在下面
-    "set matchpairs+=<:>             " Match, to be used with %
-    set pastetoggle=<F12>           " pastetoggle (sane indentation on pastes)
-    "set comments=sl:/*,mb:*,elx:*/  " auto format comment blocks
-    " Remove trailing whitespaces and ^M chars
-    " To disable the stripping of whitespace, add the following to your
-    " .vimrc.before.local file:
-    "   let g:fgle_keep_trailing_whitespace = 1
-    autocmd FileType c,cpp,java,go,php,javascript,puppet,python,rust,twig,xml,yml,perl,sql autocmd BufWritePre <buffer> if !exists('g:fgle_keep_trailing_whitespace') | call StripTrailingWhitespace() | endif
+    set nojoinspaces                " 使用连接命令时，不在 '.'、'?' 和 '!' 之后插入两个空格
+    set splitright                  " 垂直分屏在当前窗口的右边
+    set splitbelow                  " 水平分屏在当前窗口的下面
+    set matchpairs+=<:>             "  形成配对的字符, %命令从其中一个跳转到另一个
+    "移除尾后空白字符
+    autocmd FileType c,cpp,java,go,php,javascript,puppet,python,rust,twig,xml,yml,perl,sql autocmd BufWritePre <buffer> call StripTrailingWhitespace()
     "autocmd FileType go autocmd BufWritePre <buffer> Fmt
     autocmd BufNewFile,BufRead *.html.twig set filetype=html.twig
     autocmd FileType haskell,puppet,ruby,yml setlocal expandtab shiftwidth=2 softtabstop=2
-    " preceding line best in a plugin but here for now.
-
     autocmd BufNewFile,BufRead *.coffee set filetype=coffee
-
-    " Workaround vim-commentary for Haskell
     autocmd FileType haskell setlocal commentstring=--\ %s
-    " Workaround broken colour highlighting in Haskell
     autocmd FileType haskell,rust setlocal nospell
+
     "自动补全{
     inoremap ( ()<ESC>i
     inoremap ) <C-r>=ClosePair(')')<CR>
@@ -265,42 +256,54 @@
 
 " Key (re)Mappings {
 
-    " The default leader is '\', but many people prefer ',' as it's in a standard
-    " location. To override this behavior and set it back to '\' (or any other
-    " character) add the following to your .vimrc.before.local file:
-    "   let g:fgle_leader='\'
-    if !exists('g:fgle_leader')
-        let mapleader = ','
-    else
-        let mapleader=g:fgle_leader
-    endif
-    if !exists('g:fgle_localleader')
-        let maplocalleader = '_'
-    else
-        let maplocalleader=g:fgle_localleader
-    endif
+    let mapleader = ','
+    let maplocalleader = '_'
+    "Alt映射{
+    function! Terminal_MetaMode(mode)
+        if has('nvim') || has('gui_running')
+            return
+        endif
+        function! s:metacode(mode, key)
+            if a:mode == 0
+                execute "set <M-".a:key.">=\e".a:key
+            else
+                execute "set <M-".a:key.">=\e]{0}".a:key."="
+            endif
+        endfunction
+        for i in range(10)
+            call s:metacode(a:mode, nr2char(char2nr('0')+i))
+        endfor
+        for i in range(26)
+            call s:metacode(a:mode, nr2char(char2nr('a')+i))
+            call s:metacode(a:mode, nr2char(char2nr('A')+i))
+        endfor
+        if a:mod != 0
+            for c in [',','.','/',';','[',']','{','}']
+                call s:metacode(a:mode, c)
+            endfor
+            for c in ['?',':','-','_']
+                call s:metacode(a:mode, c)
+            endfor
+        else
+            for c in [',','.','/',';','{','}']
+                call s:metacode(a:mode, c)
+            endfor
+            for c in ['?',':','-','_']
+                call s:metacode(a:mode, c)
+            endfor
+        endif
+        if &ttimeout == 0
+            set ttimeout
+        endif
+        if &ttimeoutlen <= 0
+            set ttimeoutlen=100
+        endif
+    endfunction
 
-    " The default mappings for editing and applying the fgle configuration
-    " are <leader>ev and <leader>sv respectively. Change them to your preference
-    " by adding the following to your .vimrc.before.local file:
-    "   let g:fgle_edit_config_mapping='<leader>ec'
-    "   let g:fgle_apply_config_mapping='<leader>sc'
-    if !exists('g:fgle_edit_config_mapping')
-        let s:fgle_edit_config_mapping = '<leader>ev'
-    else
-        let s:fgle_edit_config_mapping = g:spf13_edit_config_mapping
-    endif
-    if !exists('g:fgle_apply_config_mapping')
-        let s:fgle_apply_config_mapping = '<leader>sv'
-    else
-        let s:fgle_apply_config_mapping = g:spf13_apply_config_mapping
-    endif
-
-    " Easier moving in tabs and windows
-    " The lines conflict with the default digraph mapping of <C-K>
-    " If you prefer that functionality, add the following to your
-    " .vimrc.before.local file:
-    "   let g:fgle_no_easyWindows = 1
+    command! -nargs=0 -band VimMetaInit! call Terminal_Metamode(<bang>0)
+    "}
+    "窗口间跳转
+    "let g:fgle_no_easyWindows = 1
     if !exists('g:fgle_no_easyWindows')
         map <C-J> <C-W>j<C-W>_
         map <C-K> <C-W>k<C-W>_
@@ -312,56 +315,7 @@
     noremap j gj
     noremap k gk
 
-    " End/Start of line motion keys act relative to row/wrap width in the
-    " presence of `:set wrap`, and relative to line for `:set nowrap`.
-    " Default vim behaviour is to act relative to text line in both cases
-    " If you prefer the default behaviour, add the following to your
-    " .vimrc.before.local file:
-    "   let g:fgle_no_wrapRelMotion = 1
-    if !exists('g:fgle_no_wrapRelMotion')
-        " Same for 0, home, end, etc
-        function! WrapRelativeMotion(key, ...)
-            let vis_sel=""
-            if a:0
-                let vis_sel="gv"
-            endif
-            if &wrap
-                execute "normal!" vis_sel . "g" . a:key
-            else
-                execute "normal!" vis_sel . a:key
-            endif
-        endfunction
-
-        " Map g* keys in Normal, Operator-pending, and Visual+select
-        noremap $ :call WrapRelativeMotion("$")<CR>
-        noremap <End> :call WrapRelativeMotion("$")<CR>
-        noremap 0 :call WrapRelativeMotion("0")<CR>
-        noremap <Home> :call WrapRelativeMotion("0")<CR>
-        noremap ^ :call WrapRelativeMotion("^")<CR>
-        " Overwrite the operator pending $/<End> mappings from above
-        " to force inclusive motion with :execute normal!
-        onoremap $ v:call WrapRelativeMotion("$")<CR>
-        onoremap <End> v:call WrapRelativeMotion("$")<CR>
-        " Overwrite the Visual+select mode mappings from above
-        " to ensure the correct vis_sel flag is passed to function
-        vnoremap $ :<C-U>call WrapRelativeMotion("$", 1)<CR>
-        vnoremap <End> :<C-U>call WrapRelativeMotion("$", 1)<CR>
-        vnoremap 0 :<C-U>call WrapRelativeMotion("0", 1)<CR>
-        vnoremap <Home> :<C-U>call WrapRelativeMotion("0", 1)<CR>
-        vnoremap ^ :<C-U>call WrapRelativeMotion("^", 1)<CR>
-    endif
-
-    " The following two lines conflict with moving to top and
-    " bottom of the screen
-    " If you prefer that functionality, add the following to your
-    " .vimrc.before.local file:
-    "   let g:fgle_no_fastTabs = 1
-    if !exists('g:fgle_no_fastTabs')
-        map <S-H> gT
-        map <S-L> gt
-    endif
-
-    " Stupid shift key fixes
+    " 适配部分大小写
     if !exists('g:fgle_no_keyfixes')
         if has("user_commands")
             command! -bang -nargs=* -complete=file E e<bang> <args>
@@ -375,79 +329,57 @@
             command! -bang Qa qa<bang>
         endif
 
-        cmap Tabe tabe
+        cnoremap Tabe tabe
     endif
 
-    " Yank from the cursor to the end of the line, to be consistent with C and D.
-    nnoremap Y y$
+    nnoremap Y y$                   "复制从光标到行尾
 
-    " Code folding options
-    nmap <leader>f0 :set foldlevel=0<CR>
-    nmap <leader>f1 :set foldlevel=1<CR>
-    nmap <leader>f2 :set foldlevel=2<CR>
-    nmap <leader>f3 :set foldlevel=3<CR>
-    nmap <leader>f4 :set foldlevel=4<CR>
-    nmap <leader>f5 :set foldlevel=5<CR>
-    nmap <leader>f6 :set foldlevel=6<CR>
-    nmap <leader>f7 :set foldlevel=7<CR>
-    nmap <leader>f8 :set foldlevel=8<CR>
-    nmap <leader>f9 :set foldlevel=9<CR>
-
-    " Most prefer to toggle search highlighting rather than clear the current
-    " search results. To clear search highlighting rather than toggle it on
-    " and off, add the following to your .vimrc.before.local file:
-    "   let g:fgle_clear_search_highlight = 1
-    if exists('g:fgle_clear_search_highlight')
-        nmap <silent> <leader>/ :nohlsearch<CR>
-    else
-        nmap <silent> <leader>/ :set invhlsearch<CR>
-    endif
-
+    " 代码折叠选项
+    nnoremap <leader>f0 :set foldlevel=0<CR>
+    nnoremap <leader>f1 :set foldlevel=1<CR>
+    nnoremap <leader>f2 :set foldlevel=2<CR>
+    nnoremap <leader>f3 :set foldlevel=3<CR>
+    nnoremap <leader>f4 :set foldlevel=4<CR>
+    nnoremap <leader>f5 :set foldlevel=5<CR>
+    nnoremap <leader>f6 :set foldlevel=6<CR>
+    nnoremap <leader>f7 :set foldlevel=7<CR>
+    nnoremap <leader>f8 :set foldlevel=8<CR>
+    nnoremap <leader>f9 :set foldlevel=9<CR>
 
     " Find merge conflict markers
-    map <leader>fc /\v^[<\|=>]{7}( .*\|$)<CR>
+    noremap <leader>fc /\v^[<\|=>]{7}( .*\|$)<CR>
 
     " Shortcuts
-    " Change Working Directory to that of the current file
-    cmap cwd lcd %:p:h
-    cmap cd. lcd %:p:h
+    " 改变工作目录到光标所在文件
+    cnoremap cwd lcd %:p:h
+    cnoremap cd. lcd %:p:h
 
     " Visual shifting (does not exit Visual mode)
     vnoremap < <gv
     vnoremap > >gv
 
-    " Allow using the repeat operator with a visual selection (!)
-    " http://stackoverflow.com/a/8064607/127816
+    " 在视图模式允许“.”操作(!)
     vnoremap . :normal .<CR>
 
-    " For when you forget to sudo.. Really Write the file.
-    cmap w!! w !sudo tee % >/dev/null
+    " sudo写入文件
+    cnoremap w!! w !sudo tee % >/dev/null
 
     " Some helpers to edit mode
-    " http://vimcasts.org/e/14
     cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<cr>
-    map <leader>ew :e %%
-    map <leader>es :sp %%
-    map <leader>ev :vsp %%
-    map <leader>et :tabe %%
+    noremap <leader>ew :e %%
+    noremap <leader>es :sp %%
+    noremap <leader>ev :vsp %%
+    noremap <leader>et :tabe %%
 
-    " Adjust viewports to the same size
-    map <Leader>= <C-w>=
+    "显示所有带有关键字（光标所在字）的行
+    nnoremap <Leader>ff [I:let nr = input("Which one: ")<Bar>exe "normal " . nr ."[\t"<CR>
 
-    " Map <Leader>ff to display all lines with keyword under cursor
-    " and ask which one to jump to
-    nmap <Leader>ff [I:let nr = input("Which one: ")<Bar>exe "normal " . nr ."[\t"<CR>
-
-    " Easier horizontal scrolling
-    map zl zL
-    map zh zH
+    " 更容易水平滚屏
+    noremap zl zL
+    noremap zh zH
 
     " Easier formatting
     nnoremap <silent> <leader>q gwip
-
-    " FIXME: Revert this f70be548
-    " fullscreen mode for GVIM and Terminal, need 'wmctrl' in you PATH
-    map <silent> <F11> :call system("wmctrl -ir " . v:windowid . " -b toggle,fullscreen")<CR>
 
 " }
 
@@ -463,15 +395,15 @@
             let g:go_fmt_command = "goimports"
             let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
             let g:syntastic_mode_map = { 'mode': 'active', 'passive_filetypes': ['go'] }
-            au FileType go nmap <Leader>s <Plug>(go-implements)
-            au FileType go nmap <Leader>i <Plug>(go-info)
-            au FileType go nmap <Leader>e <Plug>(go-rename)
-            au FileType go nmap <leader>r <Plug>(go-run)
-            au FileType go nmap <leader>b <Plug>(go-build)
-            au FileType go nmap <leader>t <Plug>(go-test)
-            au FileType go nmap <Leader>gd <Plug>(go-doc)
-            au FileType go nmap <Leader>gv <Plug>(go-doc-vertical)
-            au FileType go nmap <leader>co <Plug>(go-coverage)
+            au FileType go nnoremap <Leader>s <Plug>(go-implements)
+            au FileType go nnoremap <Leader>i <Plug>(go-info)
+            au FileType go nnoremap <Leader>e <Plug>(go-rename)
+            au FileType go nnoremap <leader>r <Plug>(go-run)
+            au FileType go nnoremap <leader>b <Plug>(go-build)
+            au FileType go nnoremap <leader>t <Plug>(go-test)
+            au FileType go nnoremap <Leader>gd <Plug>(go-doc)
+            au FileType go nnoremap <Leader>gv <Plug>(go-doc-vertical)
+            au FileType go nnoremap <leader>co <Plug>(go-coverage)
         endif
         " }
 
@@ -558,20 +490,20 @@
     " AutoCloseTag {
         " Make it so AutoCloseTag works for xml and xhtml files as well
         au FileType xhtml,xml ru ftplugin/html/autoclosetag.vim
-        nmap <Leader>ac <Plug>ToggleAutoCloseMappings
+        nnoremap <Leader>ac <Plug>ToggleAutoCloseMappings
     " }
 
     " SnipMate {
         " Setting the author var
         " If forking, please overwrite in your .vimrc.local file
-        let g:snips_author = 'Steve Francia <steve.francia@gmail.com>'
+        let g:snips_author = 'fgle <fgle.sky@gmail.com>'
     " }
 
     " NerdTree {
         if isdirectory(expand("~/.vim/plugged/nerdtree"))
-            map <C-e> <plug>NERDTreeTabsToggle<CR>
-            map <leader>e :NERDTreeFind<CR>
-            nmap <leader>nt :NERDTreeFind<CR>
+            noremap <C-e> <plug>NERDTreeTabsToggle<CR>
+            noremap <leader>e :NERDTreeFind<CR>
+            nnoremap <leader>nt :NERDTreeFind<CR>
 
             let NERDTreeShowBookmarks=1
             let NERDTreeIgnore=['\.py[cd]$', '\~$', '\.swo$', '\.swp$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
@@ -586,36 +518,36 @@
 
     " Tabularize {
         if isdirectory(expand("~/.vim/plugged/tabular"))
-            nmap <Leader>a& :Tabularize /&<CR>
-            vmap <Leader>a& :Tabularize /&<CR>
-            nmap <Leader>a= :Tabularize /^[^=]*\zs=<CR>
-            vmap <Leader>a= :Tabularize /^[^=]*\zs=<CR>
-            nmap <Leader>a=> :Tabularize /=><CR>
-            vmap <Leader>a=> :Tabularize /=><CR>
-            nmap <Leader>a: :Tabularize /:<CR>
-            vmap <Leader>a: :Tabularize /:<CR>
-            nmap <Leader>a:: :Tabularize /:\zs<CR>
-            vmap <Leader>a:: :Tabularize /:\zs<CR>
-            nmap <Leader>a, :Tabularize /,<CR>
-            vmap <Leader>a, :Tabularize /,<CR>
-            nmap <Leader>a,, :Tabularize /,\zs<CR>
-            vmap <Leader>a,, :Tabularize /,\zs<CR>
-            nmap <Leader>a<Bar> :Tabularize /<Bar><CR>
-            vmap <Leader>a<Bar> :Tabularize /<Bar><CR>
+            nnoremap <Leader>a& :Tabularize /&<CR>
+            vnoremap <Leader>a& :Tabularize /&<CR>
+            nnoremap <Leader>a= :Tabularize /^[^=]*\zs=<CR>
+            vnoremap <Leader>a= :Tabularize /^[^=]*\zs=<CR>
+            nnoremap <Leader>a=> :Tabularize /=><CR>
+            vnoremap <Leader>a=> :Tabularize /=><CR>
+            nnoremap <Leader>a: :Tabularize /:<CR>
+            vnoremap <Leader>a: :Tabularize /:<CR>
+            nnoremap <Leader>a:: :Tabularize /:\zs<CR>
+            vnoremap <Leader>a:: :Tabularize /:\zs<CR>
+            nnoremap <Leader>a, :Tabularize /,<CR>
+            vnoremap <Leader>a, :Tabularize /,<CR>
+            nnoremap <Leader>a,, :Tabularize /,\zs<CR>
+            vnoremap <Leader>a,, :Tabularize /,\zs<CR>
+            nnoremap <Leader>a<Bar> :Tabularize /<Bar><CR>
+            vnoremap <Leader>a<Bar> :Tabularize /<Bar><CR>
         endif
     " }
 
     " Session List {
         set sessionoptions=blank,buffers,curdir,folds,tabpages,winsize
         if isdirectory(expand("~/.vim/plugged/sessionman.vim/"))
-            nmap <leader>sl :SessionList<CR>
-            nmap <leader>ss :SessionSave<CR>
-            nmap <leader>sc :SessionClose<CR>
+            nnoremap <leader>sl :SessionList<CR>
+            nnoremap <leader>ss :SessionSave<CR>
+            nnoremap <leader>sc :SessionClose<CR>
         endif
     " }
 
     " JSON {
-        nmap <leader>jt <Esc>:%!python -m json.tool<CR><Esc>:set filetype=json<CR>
+        nnoremap <leader>jt <Esc>:%!python -m json.tool<CR><Esc>:set filetype=json<CR>
         let g:vim_json_syntax_conceal = 0
     " }
 
@@ -772,8 +704,8 @@
             " Plugin key-mappings {
                 " These two lines conflict with the default digraph mapping of <C-K>
                 if !exists('g:fgle_no_neosnippet_expand')
-                    imap <C-k> <Plug>(neosnippet_expand_or_jump)
-                    smap <C-k> <Plug>(neosnippet_expand_or_jump)
+                    inoremap <C-k> <Plug>(neosnippet_expand_or_jump)
+                    snoremap <C-k> <Plug>(neosnippet_expand_or_jump)
                 endif
                 if exists('g:fgle_noninvasive_completion')
                     inoremap <CR> <CR>
@@ -790,10 +722,10 @@
                 else
                     " <C-k> Complete Snippet
                     " <C-k> Jump to next snippet point
-                    imap <silent><expr><C-k> neosnippet#expandable() ?
+                    inoremap <silent><expr><C-k> neosnippet#expandable() ?
                                 \ "\<Plug>(neosnippet_expand_or_jump)" : (pumvisible() ?
                                 \ "\<C-e>" : "\<Plug>(neosnippet_expand_or_jump)")
-                    smap <TAB> <Right><Plug>(neosnippet_jump_or_expand)
+                    snoremap <TAB> <Right><Plug>(neosnippet_jump_or_expand)
 
                     inoremap <expr><C-g> neocomplete#undo_completion()
                     inoremap <expr><C-l> neocomplete#complete_common_string()
@@ -817,7 +749,7 @@
                     endfunction
 
                     " <CR> close popup and save indent or expand snippet
-                    imap <expr> <CR> CleverCr()
+                    inoremap <expr> <CR> CleverCr()
                     " <C-h>, <BS>: close popup and delete backword char.
                     inoremap <expr><BS> neocomplete#smart_close_popup()."\<C-h>"
                     inoremap <expr><C-y> neocomplete#smart_close_popup()
@@ -847,7 +779,7 @@
                     endif
                 endfunction
 
-                imap <expr> <Tab> CleverTab()
+                inoremap <expr> <Tab> CleverTab()
             " }
 
             " Enable heavy omni completion.
@@ -886,8 +818,8 @@
 
             " Plugin key-mappings {
                 " These two lines conflict with the default digraph mapping of <C-K>
-                imap <C-k> <Plug>(neosnippet_expand_or_jump)
-                smap <C-k> <Plug>(neosnippet_expand_or_jump)
+                inoremap <C-k> <Plug>(neosnippet_expand_or_jump)
+                snoremap <C-k> <Plug>(neosnippet_expand_or_jump)
                 if exists('g:fgle_noninvasive_completion')
                     inoremap <CR> <CR>
                     " <ESC> takes you out of insert mode
@@ -901,10 +833,10 @@
                     inoremap <expr> <C-d>   pumvisible() ? "\<PageDown>\<C-p>\<C-n>" : "\<C-d>"
                     inoremap <expr> <C-u>   pumvisible() ? "\<PageUp>\<C-p>\<C-n>" : "\<C-u>"
                 else
-                    imap <silent><expr><C-k> neosnippet#expandable() ?
+                    inoremap <silent><expr><C-k> neosnippet#expandable() ?
                                 \ "\<Plug>(neosnippet_expand_or_jump)" : (pumvisible() ?
                                 \ "\<C-e>" : "\<Plug>(neosnippet_expand_or_jump)")
-                    smap <TAB> <Right><Plug>(neosnippet_jump_or_expand)
+                    snoremap <TAB> <Right><Plug>(neosnippet_jump_or_expand)
 
                     inoremap <expr><C-g> neocomplcache#undo_completion()
                     inoremap <expr><C-l> neocomplcache#complete_common_string()
@@ -924,7 +856,7 @@
                     endfunction
 
                     " <CR> close popup and save indent or expand snippet
-                    imap <expr> <CR> CleverCr()
+                    inoremap <expr> <CR> CleverCr()
 
                     " <CR>: close popup
                     " <s-CR>: close popup and save indent.
@@ -1056,38 +988,11 @@
             endif
         endif
     " }
-
-
-
-" }
-
-" GUI Settings 
-
-    " GVIM- (here instead of .gvimrc)
-    if has('gui_running')
-        set guioptions-=T           " Remove the toolbar
-        set lines=40                " 40 lines of text instead of 24
-        if !exists("g:fgle_no_big_font")
-            if LINUX() && has("gui_running")
-                set guifont=Andale\ Mono\ Regular\ 12,Menlo\ Regular\ 11,Consolas\ Regular\ 12,Courier\ New\ Regular\ 14
-            elseif OSX() && has("gui_running")
-                set guifont=Andale\ Mono\ Regular:h12,Menlo\ Regular:h11,Consolas\ Regular:h12,Courier\ New\ Regular:h14
-            elseif WINDOWS() && has("gui_running")
-                set guifont=Andale_Mono:h10,Menlo:h10,Consolas:h10,Courier_New:h10
-            endif
-        endif
-    else
-        if &term == 'xterm' || &term == 'screen'
-            set t_Co=256            " Enable 256 colors to stop the CSApprox warning and make xterm vim shine
-        endif
-        "set term=builtin_ansi       " Make arrow and other keys work
-    endif
-
 " }
 
 " Functions {
 
-    " Initialize directories {
+    " 初始化目录 {
     function! InitializeDirectories()
         let parent = $HOME
         let prefix = 'vim'
@@ -1100,16 +1005,7 @@
             let dir_list['undo'] = 'undodir'
         endif
 
-        " To specify a different directory in which to place the vimbackup,
-        " vimviews, vimundo, and vimswap files/directories, add the following to
-        " your .vimrc.before.local file:
-        "   let g:fgle_consolidated_directory = <full path to desired directory>
-        "   eg: let g:fgle_consolidated_directory = $HOME . '/.vim/'
-        if exists('g:fgle_consolidated_directory')
-            let common_dir = g:fgle_consolidated_directory . prefix
-        else
-            let common_dir = parent . '/.' . prefix
-        endif
+        let common_dir = parent . '/.' . prefix
 
         for [dirname, settingname] in items(dir_list)
             let directory = common_dir . dirname . '/'
@@ -1130,35 +1026,20 @@
     call InitializeDirectories()
     " }
 
-    " Initialize NERDTree as needed {
-    function! NERDTreeInitAsNeeded()
-        redir => bufoutput
-        buffers!
-        redir END
-        let idx = stridx(bufoutput, "NERD_tree")
-        if idx > -1
-            NERDTreeMirror
-            NERDTreeFind
-            wincmd l
-        endif
-    endfunction
-    " }
-
-    " Strip whitespace {
+    " 去除空白 {
     function! StripTrailingWhitespace()
-        " Preparation: save last search, and cursor position.
         let _s=@/
         let l = line(".")
         let c = col(".")
-        " do the business:
+
         %s/\s\+$//e
-        " clean up: restore previous search history, and cursor position
+
         let @/=_s
         call cursor(l, c)
     endfunction
     " }
 
-    " Shell command {
+    " 运行Shell命令 {
     function! s:RunShellCommand(cmdline)
         botright new
 
@@ -1181,54 +1062,18 @@
     " e.g. Grep current file for <search_term>: Shell grep -Hn <search_term> %
     " }
 
-    function! s:IsfgleFork()
-        let s:is_fork = 0
-        let s:fork_files = ["~/.vimrc.fork", "~/.vimrc.before.fork", "~/.vimrc.plugs.fork"]
-        for fork_file in s:fork_files
-            if filereadable(expand(fork_file, ":p"))
-                let s:is_fork = 1
-                break
-            endif
-        endfor
-        return s:is_fork
-    endfunction
-     
     function! s:ExpandFilenameAndExecute(command, file)
         execute a:command . " " . expand(a:file, ":p")
     endfunction
-     
+
     function! s:EditfgleConfig()
         call <SID>ExpandFilenameAndExecute("tabedit", "~/.vimrc")
         call <SID>ExpandFilenameAndExecute("vsplit", "~/.vimrc.before")
         call <SID>ExpandFilenameAndExecute("vsplit", "~/.vimrc.plugs")
-     
-        execute bufwinnr(".vimrc") . "wincmd w"
-        call <SID>ExpandFilenameAndExecute("split", "~/.vimrc.local")
-        wincmd l
-        call <SID>ExpandFilenameAndExecute("split", "~/.vimrc.before.local")
-        wincmd l
-        call <SID>ExpandFilenameAndExecute("split", "~/.vimrc.plugs.local")
-     
-        if <SID>IsfgleFork()
-            execute bufwinnr(".vimrc") . "wincmd w"
-            call <SID>ExpandFilenameAndExecute("split", "~/.vimrc.fork")
-            wincmd l
-            call <SID>ExpandFilenameAndExecute("split", "~/.vimrc.before.fork")
-            wincmd l
-            call <SID>ExpandFilenameAndExecute("split", "~/.vimrc.plugs.fork")
-        endif
-     
-        execute bufwinnr(".vimrc.local") . "wincmd w"
     endfunction
-     
-    execute "noremap " . s:fgle_edit_config_mapping " :call <SID>EditSpf13Config()<CR>"
-    execute "noremap " . s:fgle_apply_config_mapping . " :source ~/.vimrc<CR>"
-" }
 
-" Use fork vimrc if available {
-    if filereadable(expand("~/.vimrc.fork"))
-        source ~/.vimrc.fork
-    endif
+    execute "noremap " . s:fgle_edit_config_mapping " :call <SID>EditfgleConfig()<CR>"
+    execute "noremap " . s:fgle_apply_config_mapping . " :source ~/.vimrc<CR>"
 " }
 
 " Use local vimrc if available {
