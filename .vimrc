@@ -24,7 +24,7 @@
 " }
 
 " Use plugs config {
-    if filereadable(expand("$HOME/.vimrc.plugs"))
+    if filereadable(expand("~/.vimrc.plugs"))
         source ~/.vimrc.plugs
     endif
 " }
@@ -32,6 +32,7 @@
 " General {
 
     set background=dark         " Assume a dark background
+    set helplang=cn
 
     " Allow to trigger background
     function! ToggleBG()
@@ -109,11 +110,9 @@
     set tabpagemax=15               " 最大标签页数
     set showmode                    " 显示模式(normal,insert,visual)
 
-    set cursorline                  " 高亮光标所在行和列
-    set hl-cursorline
-    set hl-cursorcolumn
+    set cursorline                  " 高亮光标所在行
 
-    set cmdheight=2                 "命令行高度(默认是1)
+    set cmdheight=1                 "命令行高度
 
     if has('statusline')
         set laststatus=2
@@ -217,6 +216,7 @@
             call aapend(line(".")+7,"#include<string.h>")
             call append(line(".")+8,"")
         endif
+    endfunction
     "}
     autocmd BufNewFile * normal G "新建文件后，自动定位到文件末尾
 " }
@@ -267,7 +267,7 @@
         endif
     endfunction
 
-    command! -nargs=0 -band VimMetaInit! call Terminal_Metamode(<bang>0)
+    command! -nargs=0 -bang VimMetaInit call Terminal_MetaMode(<bang>0)
     "}
     "窗口间跳转
     "let g:fgle_no_easyWindows = 1
@@ -525,10 +525,78 @@
         endif
 
         if isdirectory(expand("~/.vim/plugged/python-mode"))
-            let g:pymode_lint_checkers = ['pyflakes']
-            let g:pymode_trim_whitespaces = 0
-            let g:pymode_options = 0
-            let g:pymode_rope = 0
+            "开启警告
+            let g:pymode_warnings = 0
+            "保存文件时自动删除无用空格
+            let g:pymode_trim_whitespaces = 1
+            let g:pymode_options = 1
+            "显示允许的最大长度的列
+            let g:pymode_options_colorcolumn = 1
+            "设置QuickFix窗口的最大，最小高度
+            let g:pymode_quickfix_minheight = 3
+            let g:pymode_quickfix_maxheight = 10
+            "使用python3
+            let g:pymode_python = 'python3'
+            "使用PEP8风格的缩进
+            let g:pymode_indent = 1
+            "取消代码折叠
+            let g:pymode_folding = 0
+            "开启python-mode定义的移动方式
+            let g:pymode_motion = 1
+            "启用python-mode内置的python文档，使用K进行查找
+            let g:pymode_doc = 1
+            let g:pymode_doc_bind = 'K'
+            "自动检测并启用virtualenv
+            let g:pymode_virtualenv = 1
+            "不使用python-mode运行python代码
+            let g:pymode_run = 0
+            "let g:pymode_run_bind = '<Leader>r'
+            "不使用python-mode设置断点
+            let g:pymode_breakpoint = 0
+            "let g:pymode_breakpoint_bind = '<leader>b'
+            "启用python语法检查
+            let g:pymode_lint = 1
+            "修改后保存时进行检查
+            let g:pymode_lint_on_write = 0
+            "编辑时进行检查
+            let g:pymode_lint_on_fly = 0
+            let g:pymode_lint_checkers = ['pyflakes', 'pep8']
+            "发现错误时不自动打开QuickFix窗口
+            let g:pymode_lint_cwindow = 0
+            "侧边栏不显示python-mode相关的标志
+            let g:pymode_lint_signs = 0
+            "let g:pymode_lint_todo_symbol = 'WW'
+            "let g:pymode_lint_comment_symbol = 'CC'
+            "let g:pymode_lint_visual_symbol = 'RR'
+            "let g:pymode_lint_error_symbol = 'EE'
+            "let g:pymode_lint_info_symbol = 'II'
+            "let g:pymode_lint_pyflakes_symbol = 'FF'
+            "启用重构
+            let g:pymode_rope = 1
+            "不在父目录下查找.ropeproject，能提升响应速度
+            let g:pymode_rope_lookup_project = 0
+            "光标下单词查阅文档
+            let g:pymode_rope_show_doc_bind = '<C-c>d'
+            "项目修改后重新生成缓存
+            let g:pymode_rope_regenerate_on_write = 1
+            "开启补全，并设置<C-Tab>为默认快捷键
+            let g:pymode_rope_completion = 1
+            let g:pymode_rope_complete_on_dot = 1
+            let g:pymode_rope_completion_bind = '<C-Tab>'
+            "<C-c>g跳转到定义处，同时新建竖直窗口打开
+            let g:pymode_rope_goto_definition_bind = '<C-c>g'
+            let g:pymode_rope_goto_definition_cmd = 'vnew'
+            "重命名光标下的函数，方法，变量及类名
+            let g:pymode_rope_rename_bind = '<C-c>rr'
+            "重命名光标下的模块或包
+            let g:pymode_rope_rename_module_bind = '<C-c>r1r'
+            "开启python所有的语法高亮
+            let g:pymode_syntax = 1
+            let g:pymode_syntax_all = 1
+            "高亮缩进错误
+            let g:pymode_syntax_indent_errors = g:pymode_syntax_all
+            "高亮空格错误
+            let g:pymode_syntax_space_errors = g:pymode_syntax_all
         endif
     " }
 
@@ -547,9 +615,6 @@
                 let s:ctrlp_fallback = 'ack-grep %s --nocolor -f'
             elseif executable('ack')
                 let s:ctrlp_fallback = 'ack %s --nocolor -f'
-            " On Windows use "dir" as fallback command.
-            elseif WINDOWS()
-                let s:ctrlp_fallback = 'dir %s /-n /b /s /a-d'
             else
                 let s:ctrlp_fallback = 'find %s -type f'
             endif
@@ -609,6 +674,9 @@
 
             " enable completion from tags
             let g:ycm_collect_identifiers_from_tags_files = 1
+            let g:ycm_global_ycm_extra_conf = '~/.vim/plugged/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
+            let g:ycm_server_keep_logfiles = 1
+            let g:ycm_server_log_level = 'debug'
 
             " remap Ultisnips for compatibility for YCM
             let g:UltiSnipsExpandTrigger = '<C-j>'
@@ -1035,12 +1103,11 @@
 
     function! s:EditfgleConfig()
         call <SID>ExpandFilenameAndExecute("tabedit", "~/.vimrc")
-        call <SID>ExpandFilenameAndExecute("vsplit", "~/.vimrc.before")
         call <SID>ExpandFilenameAndExecute("vsplit", "~/.vimrc.plugs")
     endfunction
 
-    execute "noremap " . s:fgle_edit_config_mapping " :call <SID>EditfgleConfig()<CR>"
-    execute "noremap " . s:fgle_apply_config_mapping . " :source ~/.vimrc<CR>"
+    execute "noremap <leader>ev :call <SID>EditfgleConfig()<CR>"
+    execute "noremap <leader>es :source ~/.vimrc<CR>"
 " }
 
 " Use local vimrc if available {
