@@ -15,10 +15,10 @@
 #   limitations under the License.
 
 ############################  SETUP PARAMETERS
-app_name='spf13-vim'
-[ -z "$APP_PATH" ] && APP_PATH="$HOME/.spf13-vim-3"
-[ -z "$REPO_URI" ] && REPO_URI="$HOME/programs/github/spf13-vim/.git"
-[ -z "$REPO_BRANCH" ] && REPO_BRANCH='3.0'
+app_name='fgle-vim'
+[ -z "$APP_PATH" ] && APP_PATH="$HOME/.fgle-vim"
+[ -z "$REPO_URI" ] && REPO_URI="$HOME/programs/github/fgle-vim/.git"
+[ -z "$REPO_BRANCH" ] && REPO_BRANCH='1.0'
 debug_mode='0'
 fork_maintainer='0'
 [ -z "$PLUG_URI" ] && PLUG_URI="https://github.com/junegunn/vim-plug.git"
@@ -123,7 +123,6 @@ create_symlinks() {
 
     lnif "$source_path/.vimrc"         "$target_path/.vimrc"
     lnif "$source_path/.vimrc.plugs" "$target_path/.vimrc.plugs"
-    lnif "$source_path/.vimrc.before"  "$target_path/.vimrc.before"
     lnif "$source_path/.vim"           "$target_path/.vim"
 
     if program_exists "nvim"; then
@@ -136,25 +135,6 @@ create_symlinks() {
     ret="$?"
     success "Setting up vim symlinks."
     debug
-}
-
-setup_fork_mode() {
-    local source_path="$2"
-    local target_path="$3"
-
-    if [ "$1" -eq '1' ]; then
-        touch "$target_path/.vimrc.fork"
-        touch "$target_path/.vimrc.plugs.fork"
-        touch "$target_path/.vimrc.before.fork"
-
-        lnif "$source_path/.vimrc.fork"         "$target_path/.vimrc.fork"
-        lnif "$source_path/.vimrc.plugs.fork" "$target_path/.vimrc.plugs.fork"
-        lnif "$source_path/.vimrc.before.fork"  "$target_path/.vimrc.before.fork"
-
-        ret="$?"
-        success "Created fork maintainer files."
-        debug
-    fi
 }
 
 setup_plug() {
@@ -191,10 +171,6 @@ sync_repo       "$APP_PATH" \
 create_symlinks "$APP_PATH" \
                 "$HOME"
 
-setup_fork_mode "$fork_maintainer" \
-                "$APP_PATH" \
-                "$HOME"
-
 #sync_repo       "$HOME/.vim/autoload/plug.vim" \
 #                "$PLUG_URI" \
 #                "master" \
@@ -203,7 +179,6 @@ setup_fork_mode "$fork_maintainer" \
 curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
 	https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
-setup_plug    "$APP_PATH/.vimrc.plugs.default"
+setup_plug    "$HOME/.vimrc.plugs"
 
 msg             "\nThanks for installing $app_name."
-msg             "© `date +%Y` http://vim.spf13.com/"
