@@ -18,7 +18,7 @@
 app_name='fgle-vim'
 [ -z "$APP_PATH" ] && APP_PATH="$HOME/.fgle-vim"
 [ -z "$REPO_URI" ] && REPO_URI="$HOME/programs/github/fgle-vim/.git"
-[ -z "$REPO_BRANCH" ] && REPO_BRANCH='1.0'
+[ -z "$REPO_BRANCH" ] && REPO_BRANCH='3.0'
 debug_mode='0'
 fork_maintainer='0'
 [ -z "$PLUG_URI" ] && PLUG_URI="https://github.com/junegunn/vim-plug.git"
@@ -122,7 +122,7 @@ create_symlinks() {
     local target_path="$2"
 
     lnif "$source_path/.vimrc"         "$target_path/.vimrc"
-    lnif "$source_path/.vimrc.plugs" "$target_path/.vimrc.plugs"
+    lnif "$source_path/.vimrc.plugs"   "$target_path/.vimrc.plugs"
     lnif "$source_path/.vim"           "$target_path/.vim"
 
     if program_exists "nvim"; then
