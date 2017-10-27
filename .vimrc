@@ -350,7 +350,7 @@
 
 " }
 
-" Plugins {
+" Plugin {
 
     " GoLang {
         if count(g:fgle_plug_groups, 'go')
