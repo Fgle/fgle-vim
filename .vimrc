@@ -1,22 +1,21 @@
-" Modeline and Notes {
-" vim: set sw=4 ts=4 sts=4 et tw=78 foldmarker={,} foldlevel=0 foldmethod=marker spell:
+" Modeline and Notes { vim: set sw=4 ts=4 sts=4 et tw=78 foldmarker={,}
+" foldlevel=0 foldmethod=marker spell:
 "
-"   This is the personal .vimrc file of fgle.
-"   While much of it is beneficial for general use, I would
-"   recommend picking out the parts you want and understand.
+"   This is the personal .vimrc file of fgle. While much of it is beneficial
+"   for general use, I would recommend picking out the parts you want and
+"   understand.
 "
-"   Licensed under the Apache License, Version 2.0 (the "License");
-"   you may not use this file except in compliance with the License.
-"   You may obtain a copy of the License at
+"   Licensed under the Apache License, Version 2.0 (the "License"); you may
+"   not use this file except in compliance with the License. You may obtain a
+"   copy of the License at
 "
 "       http://www.apache.org/licenses/LICENSE-2.0
 "
 "   Unless required by applicable law or agreed to in writing, software
-"   distributed under the License is distributed on an "AS IS" BASIS,
-"   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-"   See the License for the specific language governing permissions and
-"   limitations under the License.
-" }
+"   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+"   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+"   License for the specific language governing permissions and limitations
+"   under the License. }
 
 " Basics {
     set nocompatible        " Must be first line
@@ -87,7 +86,11 @@
     au FileType gitcommit au! BufEnter COMMIT_EDITMSG call setpos('.', [0, 1, 1, 0])
 
     " 备份和撤销 {
-        set backup                      " 备份文件
+        if has("vms")
+            set nobackup
+        else
+            set backup                      " 备份文件
+        endif
         if has('persistent_undo')       " 撤销操作
             set undofile
             set undolevels=100
@@ -232,9 +235,9 @@
         endif
         function! s:metacode(mode, key)
             if a:mode == 0
-                execute "set <M-".a:key.">=\e".a:key
+                execute "set <M-".a:key.">=/e".a:key
             else
-                execute "set <M-".a:key.">=\e]{0}".a:key."~"
+                execute "set <M-".a:key.">=/e]{0}".a:key."~"
             endif
         endfunction
         for i in range(10)
@@ -269,13 +272,20 @@
 
     command! -nargs=0 -bang VimMetaInit call Terminal_MetaMode(<bang>0)
     "}
+    "在单词两侧插入”“,'',<>,[] {
+        noremap <leader>' i'<Esc>ea'<Esc>
+        noremap <leader>" i"<Esc>ea"<Esc>
+        noremap <leader>< i<<Esc>ea><Esc>
+        noremap <leader>( i(<Esc>ea)<Esc>
+        noremap <leader>[ i[<Esc>ea[<Esc>
+    "}
     "窗口间跳转
     "let g:fgle_no_easyWindows = 1
     if !exists('g:fgle_no_easyWindows')
-        map <C-J> <C-W>j<C-W>_
-        map <C-K> <C-W>k<C-W>_
-        map <C-L> <C-W>l<C-W>_
-        map <C-H> <C-W>h<C-W>_
+        noremap <C-J> <C-W>j<C-W>_
+        noremap <C-K> <C-W>k<C-W>_
+        noremap <C-L> <C-W>l<C-W>_
+        noremap <C-H> <C-W>h<C-W>_
     endif
 
     " Wrapped lines goes down/up to next row, rather than next line in file.
@@ -668,6 +678,34 @@
         endif
     "}
 
+    "ale{
+    if isdirectory(expand("~/.vim/plugged/ale"))
+        "始终开启标志列
+        let g:ale_sign_column_always = 1
+        let g:ale_set_highlights = 0
+        "自定义error和warning图标
+        let g:ale_sign_error = '✗'
+        let g:ale_sign_warning = '⚡'
+        "在vim自带的状态栏中整合ale
+        let g:ale_statusline_format = ['✗ %d', '⚡ %d', '✔ OK']
+        "设置状态行
+        set statusline+=\ %{ALEGetStatusLine()}
+        "显示Linter名称,出错或警告等相关信息
+        let g:ale_echo_msg_error_str = 'E'
+        let g:ale_echo_msg_warning_str = 'W'
+        let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
+        "对C/C++使用Clang进行语法检查
+        let g:ale_linters = {'c': 'clang'}
+        let g:ale_linters = {'c++': 'clang++'}
+        "普通模式下，sp前往上一个错误或警告，sn前往下一个错误或警告
+        nmap sp <Plug>(ale_previous_wrap)
+        nmap sn <Plug>(ale_next_wrap)
+        "<Leader>s触发/关闭语法检查
+        nmap <Leader>s :ALEToggle<CR>
+        "<Leader>d查看错误或警告的详细信息
+        nmap <Leader>d :ALEDetail<CR>
+    endif
+    "}
     " YouCompleteMe {
         if count(g:fgle_plug_groups, 'youcompleteme')
             let g:acp_enableAtStartup = 0
