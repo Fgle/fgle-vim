@@ -36,7 +36,7 @@
 
     " Setup Plug Support {
         " The next three lines ensure that the ~/.vim/plugged/ system works
-        call plug#begin('$HOME/.vim/plugged')
+        call plug#begin('~/.vim/plugged')
     " }
 
 " }
@@ -71,9 +71,10 @@
     " General {
         if count(g:fgle_plug_groups, 'general')
             Plug 'scrooloose/nerdtree'
+            Plug 'tomasr/molokai'
             Plug 'altercation/vim-colors-solarized'
             "Plug 'fgle/vim-colors'
-            "Plug 'tpope/vim-surround'
+            Plug 'tpope/vim-surround'
             "Plug 'tpope/vim-repeat'
             "Plug 'rhysd/conflict-marker.vim'
             "Plug 'jiangmiao/auto-pairs'
@@ -114,6 +115,7 @@
             Plug 'reedes/vim-textobj-sentence'
             Plug 'reedes/vim-textobj-quote'
             Plug 'reedes/vim-wordy'
+            Plug 'isnowfy/python-vim-instant-markdown'
         endif
     " }
 
@@ -122,12 +124,14 @@
             " Pick one of the checksyntax, jslint, or syntastic
             "Plug 'scrooloose/syntastic'
             Plug 'tpope/vim-fugitive'
+            Plug 'w0rp/ale'
             "Plug 'mattn/webapi-vim'
             "Plug 'mattn/gist-vim'
             "Plug 'scrooloose/nerdcommenter'
-            "Plug 'tpope/vim-commentary'
+            Plug 'tpope/vim-commentary'
             "Plug 'godlygeek/tabular'
             Plug 'luochen1990/rainbow'
+            Plug 'octol/vim-cpp-enhanced-highlight'
             if executable('ctags')
                 Plug 'majutsushi/tagbar'
             endif
@@ -143,7 +147,7 @@
                 source ~/.vim/plugged/vim-snippets/snippets/support_functions.vim
             endif
         elseif count(g:fgle_plug_groups, 'youcompleteme')
-            Plug 'Valloric/YouCompleteMe',{'do': './install.py --clan-completer'}
+            Plug 'Valloric/YouCompleteMe',{'do': './install.py --clang-completer'}
             Plug 'SirVer/ultisnips'
             Plug 'honza/vim-snippets'
         elseif count(g:fgle_plug_groups, 'neocomplcache')
