@@ -116,6 +116,7 @@
             Plug 'reedes/vim-textobj-quote'
             Plug 'reedes/vim-wordy'
             Plug 'isnowfy/python-vim-instant-markdown'
+            Plug 'plasticboy/vim-markdown'
         endif
     " }
 
