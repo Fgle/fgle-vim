@@ -162,6 +162,8 @@
     set splitright                  " 垂直分屏在当前窗口的右边
     set splitbelow                  " 水平分屏在当前窗口的下面
     set matchpairs+=<:>             "  形成配对的字符, %命令从其中一个跳转到另一个
+    "让配置变更立即生效
+    autocmd BufWritePost $MYVIMRC source $MYVIMRC
     "移除尾后空白字符
     autocmd FileType c,cpp,java,go,php,javascript,puppet,python,rust,twig,xml,yml,perl,sql autocmd BufWritePre <buffer> call StripTrailingWhitespace()
     "autocmd FileType go autocmd BufWritePre <buffer> Fmt
@@ -170,58 +172,13 @@
     autocmd BufNewFile,BufRead *.coffee set filetype=coffee
     autocmd FileType haskell setlocal commentstring=--\ %s
     autocmd FileType haskell,rust setlocal nospell
+    autocmd Filetype text setlocal textwidth=78
+    autocmd Filetype markdown :Instantmd
 
-    "自动补全{
-    inoremap ( ()<ESC>i
-    inoremap ) <C-r>=ClosePair(')')<CR>
-    inoremap { {<CR>}<ESC>i
-    inoremap } <C-r>=ClosePair('}')<CR>
-    inoremap [ []<ESC>i
-    inoremap ] <C-r>=ClosePair(']')<CR>
-    inoremap ' ''<ESC>i
-    inoremap " ""<ESC>i
-    function! ClosePair(char)
-        if getline('.')[col('.')-1]==a::char
-            return "\<Right>"
-        else
-            return a:char
-        endif
-    endfunction
-    "}
-    "新建x,h,sh,java文件，自动插入文件头{
-    autocmd BufNewFile *.[ch],*.cpp,*.sh,*java exec ".call SetTitle()"
-    function SetLine()
-        if &filetype=='sh'
-            call setline(1,"\#################################################")
-            call append(line("."),"\# File Name:".expand("%"))
-            call append(line(".")+1,"\# Author:fgle")
-            call append(line(".")+2,"\# mail:fgle.sky@gmail.com")
-            call append(line(".")+3,"\# Created Time:".strftime("%c"))
-            call setline(line(".")+4,"\#################################################")
-            call append(line(".")+5,"\#!/bin/bash")
-            call append(line(".")+6,"")
-        else
-            call setline(1,"/*************************************************")
-            call append(line(".")," >File Name:".expand("%"))
-            call append(line(".")+1," >Author:fgle")
-            call append(line(".")+2," >mail:fgle.sky@gmail.com")
-            call append(line(".")+3," >Created Time:".strftime("%c"))
-            call setline(line(".")+4,"*************************************************/")
-            call append(line(".")+5,"")
-        endif
-        if &filetype=='cpp'
-            call append(line(".")+6,"#include<iostream>")
-            call append(line(".")+7,"#include<string>")
-            call append(line(".")+8,"")
-        endif
-        if &filetype=='c'
-            call append(line(".")+6,"#include<stdio.h>")
-            call aapend(line(".")+7,"#include<string.h>")
-            call append(line(".")+8,"")
-        endif
-    endfunction
-    "}
-    autocmd BufNewFile * normal G "新建文件后，自动定位到文件末尾
+    "新建x,h,sh,java,python文件，自动插入文件头{
+    autocmd BufNewFile *.[ch],*.cpp,*.sh,*java exec ":call SetTitle()"
+    autocmd BufNewFile *.py exec ":call SetTPythonTitle()"
+    autocmd BufNewFile * normal! G "新建文件后，自动定位到文件末尾
 " }
 
 " Key (re)Mappings {
@@ -272,13 +229,22 @@
 
     command! -nargs=0 -bang VimMetaInit call Terminal_MetaMode(<bang>0)
     "}
-    "在单词两侧插入”“,'',<>,[] {
-        noremap <leader>' i'<Esc>ea'<Esc>
-        noremap <leader>" i"<Esc>ea"<Esc>
-        noremap <leader>< i<<Esc>ea><Esc>
-        noremap <leader>( i(<Esc>ea)<Esc>
-        noremap <leader>[ i[<Esc>ea[<Esc>
+
+    "自动补全{
+
+        inoremap ' <C-r>=AutoPair("'","'")<CR>
+        inoremap " <C-r>=AutoPair('"','"')<CR>
+        inoremap < <C-r>=AutoPair('<','>')<CR>
+        inoremap > <C-r>=ClosePair('>')<CR>
+        inoremap [ <C-r>=AutoPair('[',']')<CR>
+        inoremap ] <C-r>=ClosePair(']')<CR>
+        inoremap ( <C-r>=AutoPair('(',')')<CR>
+        inoremap ) <C-r>=ClosePair(')')<CR>
+        inoremap { <C-r>=AutoPair('{','}')<CR>
+        inoremap } <C-r>=ClosePair('}')<CR>
+        autocmd Filetype c,cpp,java,shell inoremap { {<CR>}<Esc>k$a<CR>
     "}
+
     "窗口间跳转
     "let g:fgle_no_easyWindows = 1
     if !exists('g:fgle_no_easyWindows')
@@ -310,18 +276,20 @@
     endif
 
     nnoremap Y y$                   "复制从光标到行尾
+    vnoremap <leader>y "+y          "将选中文本复制到系统剪贴板
+    nnoremap <leader>p "+p          "将系统剪贴板内容粘贴至vim
 
     " 代码折叠选项
-    nnoremap <leader>f0 :set foldlevel=0<CR>
-    nnoremap <leader>f1 :set foldlevel=1<CR>
-    nnoremap <leader>f2 :set foldlevel=2<CR>
-    nnoremap <leader>f3 :set foldlevel=3<CR>
-    nnoremap <leader>f4 :set foldlevel=4<CR>
-    nnoremap <leader>f5 :set foldlevel=5<CR>
-    nnoremap <leader>f6 :set foldlevel=6<CR>
-    nnoremap <leader>f7 :set foldlevel=7<CR>
-    nnoremap <leader>f8 :set foldlevel=8<CR>
-    nnoremap <leader>f9 :set foldlevel=9<CR>
+    nmap <leader>f0 :set foldlevel=0<CR>
+    nmap <leader>f1 :set foldlevel=1<CR>
+    nmap <leader>f2 :set foldlevel=2<CR>
+    nmap <leader>f3 :set foldlevel=3<CR>
+    nmap <leader>f4 :set foldlevel=4<CR>
+    nmap <leader>f5 :set foldlevel=5<CR>
+    nmap <leader>f6 :set foldlevel=6<CR>
+    nmap <leader>f7 :set foldlevel=7<CR>
+    nmap <leader>f8 :set foldlevel=8<CR>
+    nmap <leader>f9 :set foldlevel=9<CR>
 
     " Find merge conflict markers
     noremap <leader>fc /\v^[<\|=>]{7}( .*\|$)<CR>
@@ -341,19 +309,15 @@
     " sudo写入文件
     cnoremap w!! w !sudo tee % >/dev/null
 
-    " Some helpers to edit mode
-    cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<cr>
-    noremap <leader>ew :e %%
-    noremap <leader>es :sp %%
-    noremap <leader>ev :vsp %%
-    noremap <leader>et :tabe %%
-
     "显示所有带有关键字（光标所在字）的行
     nnoremap <Leader>ff [I:let nr = input("Which one: ")<Bar>exe "normal " . nr ."[\t"<CR>
 
     " 更容易水平滚屏
     noremap zl zL
     noremap zh zH
+
+    "在当前行末添加分号，并保持光标不动
+    nnoremap <silent> <leader>; :execute "normal! mqA;<C-v><Esc>`q"<CR>
 
     " Easier formatting
     nnoremap <silent> <leader>q gwip
@@ -384,6 +348,51 @@
         endif
         " }
 
+    " vim-surround{
+    if isdirectory(expand("~/.vim/plugged/vim-surround"))
+        "一个单词
+        nmap <leader>' ysiw'<CR>
+        nmap <leader>" ysiw"<CR>
+        nmap <leader>[ ysiw]<CR>
+        nmap <leader>( ysiw)<CR>
+        nmap <leader>< ysiw><CR>
+        nmap <leader>{ ysiw}<CR>
+        "一行
+        nmap <leader>l' yss'<CR>
+        nmap <leader>l" yss"<CR>
+        nmap <leader>l[ yss]<CR>
+        nmap <leader>l( yss)<CR>
+        nmap <leader>l< yss><CR>
+        nmap <leader>l{ yss}<CR>
+        "删除
+        nmap <leader>d' ds'<CR>
+        nmap <leader>d" ds"<CR>
+        nmap <leader>d[ ds]<CR>
+        nmap <leader>d( ds)<CR>
+        nmap <leader>d< ds><CR>
+        nmap <leader>d{ ds}<CR>
+    endif
+    " }
+
+    " vim-commentary{
+        if isdirectory(expand("~/.vim/plugged/vim-commentary"))
+            "为python,shell添加注释规则
+            autocmd Filetype python,shell set commentstring=#\ %s
+            "修改注释风格
+            autocmd Filetype java,c,cpp set commentstring=//\ %s
+        endif
+     " }
+    "cpp_highlight{
+        if isdirectory(expand("~/.vim/plugged/"))
+            let g:cpp_class_scope_highlight = 1
+            let g:cpp_member_variable_highlight = 1
+            "let g:cpp_class_decl_highlight = 1
+            let g:cpp_experimental_template_highlight = 1
+            "let g:cpp_experimental_simple_template_highlight = 1
+            let g:cpp_concepts_highlight = 1
+            "let g:cpp_no_function_highlight = 1
+        endif
+    "}
 
     " TextObj Sentence {
         if count(g:fgle_plug_groups, 'writing')
@@ -423,7 +432,7 @@
         endif
     " }
 
-    " OmniComplete {
+    " OmniComplete
         " To disable omni complete, add the following to your .vimrc.before.local file:
         "   let g:fgle_no_omni_complete = 1
         if !exists('g:fgle_no_omni_complete')
@@ -729,6 +738,7 @@
             autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
             autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
             autocmd FileType haskell setlocal omnifunc=necoghc#omnifunc
+            inoremap <leader>c <C-x><C-o>
 
             " Haskell post write lint and check with ghcmod
             " $ `cabal install ghcmod` if missing and ensure
@@ -1064,6 +1074,78 @@
 " }
 
 " Functions {
+    "自动补全{
+        function! AutoPair(open, close)
+            let line = getline('.')
+            if col('.') > strlen(line)
+                if a:open == '{'
+                    return a:open.a:close."\<Esc>o"
+                else
+                    return a:open.a:close."\<ESC>i"
+                endif
+            elseif line[col('.') - 1] == ' ' || line[col('.') - 1] == ')'|| line[col('.') - 1] == ']'
+                return a:open.a:close."\<ESC>i"
+            elseif a:open == '<' && line[col('.') - 2] == '<'        "适应c++
+                return a:open."\<Esc>lxi"
+            elseif line[col('.') - 1] == '>'
+                return a:open.a:close."\<Esc>i"
+            else
+                 return a:open
+            endif
+        endfunction
+
+        function! ClosePair(char)
+            if getline('.')[col('.') - 1] == a:char
+                return "\<Right>"
+            else
+                return a:char
+            endif
+        endfunction
+    "}
+
+    "补全头文件{
+        function! SetTitle()
+            if &filetype=='sh'
+                call setline(1,"\#################################################")
+                call append(line("."),"\# File Name: ".expand("%"))
+                call append(line(".")+1,"\# Author: fgle")
+                call append(line(".")+2,"\# mail: fgle.sky@gmail.com")
+                call append(line(".")+3,"\# Created Time: ".strftime("%c"))
+                call setline(line(".")+4,"\#################################################")
+                call append(line(".")+5,"\#!/bin/bash")
+                call append(line(".")+6,"")
+            else
+                call setline(1,"/*************************************************")
+                call append(line(".")," >File Name: ".expand("%"))
+                call append(line(".")+1," >Author: fgle")
+                call append(line(".")+2," >mail: fgle.sky@gmail.com")
+                call append(line(".")+3," >Created Time: ".strftime("%c"))
+                call setline(line(".")+4,"*************************************************/")
+                call append(line(".")+5,"")
+            endif
+            if &filetype=='cpp'
+                call append(line(".")+6,"#include<iostream>")
+                call append(line(".")+7,"#include<string>")
+                call append(line(".")+8,"")
+            endif
+            if &filetype=='c'
+                call append(line(".")+6,"#include<stdio.h>")
+                call aapend(line(".")+7,"#include<string.h>")
+                call append(line(".")+8,"")
+            endif
+        endfunction
+
+        function! SetTPythonTitle()
+                call setline(1,"#!/usr/bin/env python")
+                call append(line('.'),"#-*-coding: utf-8 -*-")
+            call append(line('.')+1," ")
+            call append(line(".")+2,"\# >File Name: ".expand("%"))
+            call append(line(".")+3,"\# >Author: fgle")
+            call append(line(".")+4,"\# >mail: fgle.sky@gmail.com")
+            call append(line(".")+5,"\# >Created Time: ".strftime("%c"))
+            call append(line('.')+6,"")
+        endfunction
+    "}
 
     " 初始化目录 {
     function! InitializeDirectories()
