@@ -121,9 +121,9 @@ create_symlinks() {
     local source_path="$1"
     local target_path="$2"
 
-    lnif "$source_path/.vimrc"         "$target_path/.vimrc"
-    lnif "$source_path/.vimrc.plugs"   "$target_path/.vimrc.plugs"
-    lnif "$source_path/.vim"           "$target_path/.vim"
+    cp "$source_path/.vimrc"         "$target_path/.vimrc"
+    cp "$source_path/.vimrc.plugs"   "$target_path/.vimrc.plugs"
+    mkdir "$target_path/.vim"
 
     if program_exists "nvim"; then
         lnif "$source_path/.vim"       "$target_path/.config/nvim"
