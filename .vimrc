@@ -102,7 +102,7 @@
 " }
 
 " Vim UI {
-    if !exists('g:override_fgle_plugs') && filereadable(expand("~/.vim/plugged/vim-colors-solarized/colors/solarized.vim"))
+    if filereadable(expand("~/.vim/plugged/vim-colors-solarized/colors/solarized.vim"))
         let g:solarized_termcolors=256
         let g:solarized_termtrans=1
         let g:solarized_contrast="normal"
@@ -122,7 +122,7 @@
 
         set statusline=%<%f\                     " 文件名
         set statusline+=%w%h%m%r                 " Options
-        if !exists('g:override_fgle_plugs')
+        if isdirectory(expand("~/.vim/plugged/vim-fugitive"))
             set statusline+=%{fugitive#statusline()} " Git
         endif
         set statusline+=\ [%{&ff}/%Y]            " 文件类型
@@ -164,7 +164,7 @@
     set splitbelow                  " 水平分屏在当前窗口的下面
     set matchpairs+=<:>             "  形成配对的字符, %命令从其中一个跳转到另一个
     "让配置变更立即生效
-    autocmd BufWritePost $MYVIMRC source $MYVIMRC
+    "autocmd BufWritePost $MYVIMRC source $MYVIMRC
     "移除尾后空白字符
     autocmd FileType c,cpp,java,go,php,javascript,puppet,python,rust,twig,xml,yml,perl,sql autocmd BufWritePre <buffer> call StripTrailingWhitespace()
     "autocmd FileType go autocmd BufWritePre <buffer> Fmt
@@ -173,8 +173,8 @@
     autocmd Filetype text setlocal textwidth=78
 
     "新建x,h,sh,java,python文件，自动插入文件头{
-    autocmd BufNewFile *.[ch],*.cpp,*.sh,*java exec ":call SetTitle()"
-    autocmd BufNewFile *.py exec ":call SetTPythonTitle()"
+    autocmd BufNewFile *.[ch],*.cpp,*.sh,*java execute ":call SetTitle()"
+    autocmd BufNewFile *.py execute ":call SetTPythonTitle()"
     autocmd BufNewFile * normal! G "新建文件后，自动定位到文件末尾
 " }
 
