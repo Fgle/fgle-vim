@@ -341,7 +341,7 @@
     " }
     " Snippets & AutoComplete {
         " YouCompleteMe {
-            if count(g:fgle_plug_groups, 'youcompleteme')
+            if isdirectory(expand("~/.vim/plugged/YouCompleteMe"))
                 let g:acp_enableAtStartup = 0
 
                 " enable completion from tags
