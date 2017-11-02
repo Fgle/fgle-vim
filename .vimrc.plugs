@@ -89,6 +89,7 @@
 " Initlalize plugin system {
     call plug#end()
 " }
+
 " Plugin {
     " General {
         " NerdTree {
@@ -96,13 +97,12 @@
                 noremap <C-e> <plug>NERDTreeTabsToggle<CR>
                 noremap <leader>e :NERDTreeFind<CR>
 
-                let g:nerdtree_tabs_open_on_gui_startup=0
                 " 是否显示隐藏文件
                 let NERDTreeShowHidden=1
                 " 设置宽度
                 let NERDTreeWinSize=31
-                " 在终端启动vim时，共享NERDTree
-                let g:nerdtree_tabs_open_on_console_startup=1
+                " 在启动vim时，启动NERDTree
+                "let g:nerdtree_tabs_open_on_console_startup=1
                 " 忽略一下文件的显示
                 let NERDTreeIgnore=['\.py[cd]$', '\~$', '\.swo$', '\.swp$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
                 " 显示书签列表
@@ -172,15 +172,13 @@
         " }
 
         " vim-airline {
-            if isdirectory(expand("~/.vim/plugged/vim-airline-themes/"))
-                if !exists('g:airline_theme')
+            if isdirectory(expand("~/.vim/plugged/vim-airline/"))
+                if isdirectory(expand("~/.vim/plugged/vim-airline-themes"))
                     let g:airline_theme = 'solarized'
                 endif
-                if !exists('g:airline_powerline_fonts')
-                    " Use the default set of separators with a few customizations
-                    let g:airline_left_sep='›'  " Slightly fancier than '>'
-                    let g:airline_right_sep='‹' " Slightly fancier than '<'
-            endif
+                let g:airline_powerline_fonts=1
+                "显示tab和buffer
+                let g:airline#extensions#tabline#enabled=1
             endif
         " }
     " }
@@ -194,7 +192,6 @@
     " }
 
     " Programing {
-
         " Fugitive {
             if isdirectory(expand("~/.vim/plugged/vim-fugitive/"))
                 nnoremap <silent> <leader>gs :Gstatus<CR>
@@ -344,16 +341,29 @@
             endif
         "}
     " }
+
     " Snippets & AutoComplete {
         " YouCompleteMe {
             if isdirectory(expand("~/.vim/plugged/YouCompleteMe"))
                 let g:acp_enableAtStartup = 0
 
                 " enable completion from tags
+                " 允许加载.ycm_extra_conf.py文件,不再提示
+                let g:gym_confirm_extra_conf = 1
+                "加载路径
+                let g:ycm_global_ycm_extra_conf = '~/.vim/.ycm_extra_conf.py'
+                "在注释中同样可以补全
+                let g:gym_complete_in_comments = 1
+                "开启ycm标签补全引擎
                 let g:ycm_collect_identifiers_from_tags_files = 1
-                let g:ycm_global_ycm_extra_conf = '~/.vim/plugged/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
-                let g:ycm_server_keep_logfiles = 1
-                let g:ycm_server_log_level = 'debug'
+                "引入c++标准库tags
+                set tags+=/usr/include/c++/7.2.0/stdcpp.tags
+                "从第一个字符开始匹配
+                let g:ycm_min_num_of_chars_for_completion=1
+                "禁止缓存匹配项
+                "let g:ycm_cache_omnifunc=0
+                "语法关键字补全
+                let g:ycm_seed_identifiers_with_syntax=1
 
                 " remap Ultisnips for compatibility for YCM
                 let g:UltiSnipsExpandTrigger = "<leader><tab>"

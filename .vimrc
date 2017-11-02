@@ -269,7 +269,7 @@
                 call s:metacode(a:mode, nr2char(char2nr('a')+i))
                 call s:metacode(a:mode, nr2char(char2nr('A')+i))
             endfor
-            if a:mod != 0
+            if a:mode != 0
                 for c in [',','.','/',';','[',']','{','}']
                     call s:metacode(a:mode, c)
                 endfor
@@ -291,8 +291,9 @@
                 set ttimeoutlen=100
             endif
         endfunction
+        call Terminal_MetaMode(1)
 
-        command! -nargs=0 -bang VimMetaInit call Terminal_MetaMode(<bang>0)
+        command! -nargs=0 -bang VimMetaInit call Terminal_MetaMode(<bang>1)
          "}
 
     "自动补全{
