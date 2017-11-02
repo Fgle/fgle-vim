@@ -1,5 +1,5 @@
 " Modeline and Notes { vim: set sw=4 ts=4 sts=4 et tw=78 foldmarker={,}
-" foldlevel=0 foldmethod=marker spell:
+" foldlevel=0 foldmethod=indent spell:
 "
 "   This is the personal .vimrc file of fgle. While much of it is beneficial
 "   for general use, I would recommend picking out the parts you want and
